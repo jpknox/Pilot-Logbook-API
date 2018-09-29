@@ -40,6 +40,24 @@ public class Logbook {
         }
     }
 
+    public boolean containsEntry(UUID entryId) {
+        Optional<LogbookEntry> optional = entries.stream()
+                .filter((e) -> e.getEntryId().equals(entryId))
+                .findFirst();
+        return optional.isPresent();
+    }
+
+    public boolean remove(UUID entryId) {
+        Optional<LogbookEntry> optional = entries.stream()
+                .filter((e) -> e.getEntryId().equals(entryId))
+                .findFirst();
+        if (optional.isPresent()) {
+            entries.remove(optional.get());
+            return true;
+        }
+        return false;
+    }
+
     private void setupTestData() {
         LocalDate date = LocalDate.now();
         Aircraft aircraft = new Aircraft("PA28", "G-BBXW");
