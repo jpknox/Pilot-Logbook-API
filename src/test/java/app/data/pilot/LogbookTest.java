@@ -6,10 +6,9 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class LogbookTest {
 
@@ -67,5 +66,21 @@ class LogbookTest {
         logbook.add(entry);
         LogbookEntry returnedEntry = logbook.get(entry.getEntryId());
         assertEquals(entry, returnedEntry);
+    }
+
+    @Test
+    void testContains_SingleEntryReturnsTrue() {
+        LogbookEntryBuilder logbookEntryBuilder = new LogbookEntryBuilder();
+        LogbookEntry logbookEntry = logbookEntryBuilder.build();
+        logbook.add(logbookEntry);
+        boolean contains = logbook.containsEntry(logbookEntry.getEntryId());
+        assertTrue(contains);
+    }
+
+    @Test
+    void testContains_NoEntryReturnsFalse() {
+        UUID randomUUID = UUID.randomUUID();
+        boolean contains = logbook.containsEntry(randomUUID);
+        assertFalse(contains);
     }
 }
