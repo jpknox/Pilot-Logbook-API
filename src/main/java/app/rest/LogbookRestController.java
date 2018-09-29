@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-public class LogbookHttpListener {
+public class LogbookRestController {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     
