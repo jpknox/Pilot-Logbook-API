@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public class LogbookEntry {
 
-    private UUID entryId;
+    private final UUID entryId = UUID.randomUUID();
     private LocalDate date;
     private Aircraft aircraft;
     private String captain;
@@ -24,7 +24,6 @@ public class LogbookEntry {
     private String remarks;
 
     public LogbookEntry() {
-        this.entryId = UUID.randomUUID();   //TODO: Spring uses this constructor. Write test to ensure this ID is set.
     }
 
     public LogbookEntry(LocalDate date,
@@ -40,7 +39,6 @@ public class LogbookEntry {
                         int numOfTakeoffs,
                         int numOfLandings,
                         String remarks) {
-        this.entryId = UUID.randomUUID();
         this.date = date;
         this.aircraft = aircraft;
         this.captain = captain;
