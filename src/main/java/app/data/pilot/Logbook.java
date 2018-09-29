@@ -12,7 +12,7 @@ public class Logbook {
     private LinkedList<LogbookEntry> entries = new LinkedList();
 
     public Logbook() {
-        setupTestData();
+        //setupTestData();
     }
 
     public UUID getId() {
