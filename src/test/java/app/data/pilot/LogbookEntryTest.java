@@ -1,17 +1,20 @@
 package app.data.pilot;
 
 import app.data.aircraft.Aircraft;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class LogbookEntryTest {
 
     @Test
-    void testCreateNewEntry_ConstructorSetsAllFields() {
+    void testCreateNewEntry_EncompassingConstructorSetsAllFields() {
         LocalDate date = LocalDate.now();
         Aircraft aircraft = new Aircraft("PA28", "G-BBXW");
         String captain = "João Paulo Knox";
@@ -41,6 +44,7 @@ class LogbookEntryTest {
                 remarks
         );
         assertNotNull(entry.getEntryId());
+        assertTrue(entry.getEntryId() instanceof UUID);
         assertEquals(aircraft, entry.getAircraft());
         assertEquals(captain, entry.getCaptain());
         assertEquals(holdersOperatingCapacity, entry.getHoldersOperatingCapacity());
@@ -53,5 +57,12 @@ class LogbookEntryTest {
         assertEquals(numOfTakeoffs, entry.getNumOfTakeoffs());
         assertEquals(numOfLandings, entry.getNumOfLandings());
         assertEquals(remarks, entry.getRemarks());
+    }
+
+    @Test
+    public void testID_SetThroughEmptyConstructor() {
+        LogbookEntry entry = new LogbookEntry();
+        assertNotNull(entry.getEntryId());
+        assertTrue(entry.getEntryId() instanceof UUID);
     }
 }
