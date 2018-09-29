@@ -3,6 +3,8 @@ package app.rest;
 import app.data.LogbookStorage;
 import app.data.pilot.Logbook;
 import app.data.pilot.LogbookEntry;
+import app.rest.response.error.ErrorResponse;
+import app.rest.response.success.SuccessResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,5 +62,24 @@ public class LogbookHttpListener {
         logger.info("An er  ror occurred whilst updating logbook identified by ID " + logbookId + "'.");
         return ResponseEntity.status(409).body(logbook);
     }
+
+    @RequestMapping(path = "/logbooks/{logbookId}/entries/{entryId}")
+    public ResponseEntity<Object> deleteEntry(@PathVariable("logbookId") UUID logbookId,
+                                              @PathVariable("entryId") UUID entryId) {
+        Logbook logbook = logbookStorage.get(logbookId);
+        if (logbook == null) {
+            return ResponseEntity.status(400).body(new ErrorResponse("Logbook doesn't exist."));
+        }
+        if (!logbook.containsEntry(entryId)) {
+            return ResponseEntity.status(400).body(new ErrorResponse("Entry doesn't exist."));
+        }
+        boolean removed = logbook.remove(entryId);
+        if (removed) {
+            return ResponseEntity.status(200).body(new SuccessResponse("Entry deleted."));
+        } else {
+            return ResponseEntity.status(500).body(new ErrorResponse("An error has occurred."));
+        }
+    }
+
 
 }
