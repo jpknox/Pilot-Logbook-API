@@ -3,8 +3,8 @@ package app.rest;
 import app.data.LogbookStorage;
 import app.data.pilot.Logbook;
 import app.data.pilot.LogbookEntry;
-import app.rest.response.error.ErrorResponse;
-import app.rest.response.success.SuccessResponse;
+import app.rest.response.error.ErrorSingleMessageResponse;
+import app.rest.response.success.SuccessSingleMessageResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,8 @@ public class LogbookHttpListener {
         if (logbookId != null) {
             logger.info("Created new logbook that has the id '" + logbookId + "'.");
         }
-        return ResponseEntity.status(200).body(logbookId);
+        String responseMessage = String.format("Logbook created. Its ID is '%s'.", logbookId);
+        return ResponseEntity.status(200).body(new SuccessSingleMessageResponse(responseMessage));
     }
 
     @RequestMapping(path = "/logbooks/{logbookId}/entries",
@@ -51,7 +52,7 @@ public class LogbookHttpListener {
         Logbook logbook = logbookStorage.get(logbookId);
         if (logbook == null) {
             logger.info("No logbook found for ID '" + logbookId + "'.");
-            return ResponseEntity.status(404).body("No logbook exists for that ID.");
+            return ResponseEntity.status(404).body(new ErrorSingleMessageResponse("No logbook exists for that ID."));
         }
         logbook.add(logbookEntry);
         boolean replaced = logbookStorage.replace(logbook);
@@ -59,25 +60,27 @@ public class LogbookHttpListener {
             logger.info("New aircraft added to logbook '" + logbookId + "'.");
             return ResponseEntity.status(200).body(logbook);
         }
-        logger.info("An er  ror occurred whilst updating logbook identified by ID " + logbookId + "'.");
-        return ResponseEntity.status(409).body(logbook);
+        String errorMessage = String.format("An error occurred whilst updating logbook identified by ID '%s'.", logbookId);
+        logger.info(errorMessage);
+        return ResponseEntity.status(400).body(new ErrorSingleMessageResponse(errorMessage));
     }
 
-    @RequestMapping(path = "/logbooks/{logbookId}/entries/{entryId}")
+    @RequestMapping(path = "/logbooks/{logbookId}/entries/{entryId}",
+                    method = RequestMethod.DELETE)
     public ResponseEntity<Object> deleteEntry(@PathVariable("logbookId") UUID logbookId,
                                               @PathVariable("entryId") UUID entryId) {
         Logbook logbook = logbookStorage.get(logbookId);
         if (logbook == null) {
-            return ResponseEntity.status(400).body(new ErrorResponse("Logbook doesn't exist."));
+            return ResponseEntity.status(400).body(new ErrorSingleMessageResponse("Logbook doesn't exist."));
         }
         if (!logbook.containsEntry(entryId)) {
-            return ResponseEntity.status(400).body(new ErrorResponse("Entry doesn't exist."));
+            return ResponseEntity.status(400).body(new ErrorSingleMessageResponse("Entry doesn't exist."));
         }
         boolean removed = logbook.remove(entryId);
         if (removed) {
-            return ResponseEntity.status(200).body(new SuccessResponse("Entry deleted."));
+            return ResponseEntity.status(200).body(new SuccessSingleMessageResponse("Entry deleted."));
         } else {
-            return ResponseEntity.status(500).body(new ErrorResponse("An error has occurred."));
+            return ResponseEntity.status(500).body(new ErrorSingleMessageResponse("An error has occurred."));
         }
     }
 

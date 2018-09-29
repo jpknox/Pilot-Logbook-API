@@ -2,14 +2,14 @@ package app.rest.response.error;
 
 import app.rest.response.SingleMessageResponse;
 
-public class ErrorResponse implements SingleMessageResponse {
+public class ErrorSingleMessageResponse implements SingleMessageResponse {
 
     private String message;
 
-    public ErrorResponse() {
+    public ErrorSingleMessageResponse() {
     }
 
-    public ErrorResponse(String message) {
+    public ErrorSingleMessageResponse(String message) {
         this.message = message;
     }
 

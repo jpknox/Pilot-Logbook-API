@@ -2,14 +2,14 @@ package app.rest.response.success;
 
 import app.rest.response.SingleMessageResponse;
 
-public class SuccessResponse implements SingleMessageResponse {
+public class SuccessSingleMessageResponse implements SingleMessageResponse {
 
     private String message;
 
-    public SuccessResponse() {
+    public SuccessSingleMessageResponse() {
     }
 
-    public SuccessResponse(String message) {
+    public SuccessSingleMessageResponse(String message) {
         this.message = message;
     }
 
