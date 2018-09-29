@@ -83,4 +83,21 @@ class LogbookTest {
         boolean contains = logbook.containsEntry(randomUUID);
         assertFalse(contains);
     }
+
+    @Test
+    void testRemove_SingleEntryReturnsTrue() {
+        LogbookEntryBuilder logbookEntryBuilder = new LogbookEntryBuilder();
+        LogbookEntry entry = logbookEntryBuilder.build();
+        logbook.add(entry);
+        boolean removed = logbook.remove(entry.getEntryId());
+        assertTrue(removed);
+    }
+
+    @Test
+    void testRemove_NoEntryReturnsFalse() {
+        UUID randomUUID = UUID.randomUUID();
+        boolean removed = logbook.remove(randomUUID);
+        assertFalse(removed);
+
+    }
 }
