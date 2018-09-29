@@ -44,7 +44,6 @@ public class LogbookHttpListener {
 
     @RequestMapping(path = "/logbooks/{logbookId}/entries",
                     method = RequestMethod.POST)
-    @ResponseBody
     public ResponseEntity<Object> createEntry(@PathVariable("logbookId") UUID logbookId,
                                               @RequestBody LogbookEntry logbookEntry) {
         Logbook logbook = logbookStorage.get(logbookId);
