@@ -3,6 +3,8 @@ package app.rest;
 import app.data.LogbookStorage;
 import app.data.pilot.Logbook;
 import app.data.pilot.LogbookEntry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +13,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-public class HttpListener {
+public class LogbookHttpListener {
 
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    
     @Autowired
     private LogbookStorage logbookStorage;
 
@@ -21,10 +25,10 @@ public class HttpListener {
     public ResponseEntity<Object> getLogbook(@PathVariable("logbookId") UUID logbookId) {
         Logbook logbook = logbookStorage.get(logbookId);
         if (logbook == null) {
-            System.out.println("Logbook not found for ID '" + logbookId + "'.");
+            logger.info("Logbook not found for ID '" + logbookId + "'.");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        System.out.println("Logbook found for ID '" + logbookId + "'.");
+        logger.info("Logbook found for ID '" + logbookId + "'.");
         return ResponseEntity.status(200).body(logbook);
     }
 
@@ -33,7 +37,7 @@ public class HttpListener {
     public ResponseEntity<Object> createLogbook() {
         UUID logbookId = logbookStorage.create();
         if (logbookId != null) {
-            System.out.println("Created new logbook that has the id '" + logbookId + "'.");
+            logger.info("Created new logbook that has the id '" + logbookId + "'.");
         }
         return ResponseEntity.status(200).body(logbookId);
     }
@@ -45,16 +49,16 @@ public class HttpListener {
                                               @RequestBody LogbookEntry logbookEntry) {
         Logbook logbook = logbookStorage.get(logbookId);
         if (logbook == null) {
-            System.out.println("No logbook found for ID '" + logbookId + "'.");
+            logger.info("No logbook found for ID '" + logbookId + "'.");
             return ResponseEntity.status(404).body("No logbook exists for that ID.");
         }
         logbook.add(logbookEntry);
         boolean replaced = logbookStorage.replace(logbook);
         if (replaced) {
-            System.out.println("New aircraft added to logbook '" + logbookId + "'.");
+            logger.info("New aircraft added to logbook '" + logbookId + "'.");
             return ResponseEntity.status(200).body(logbook);
         }
-        System.out.println("An error occurred whilst updating logbook identified by ID " + logbookId + "'.");
+        logger.info("An er  ror occurred whilst updating logbook identified by ID " + logbookId + "'.");
         return ResponseEntity.status(409).body(logbook);
     }
 
