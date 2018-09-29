@@ -4,6 +4,6 @@ public interface SingleMessageResponse {
 
     public String getMessage();
 
-    public void setMessage();
+    public void setMessage(String message);
 
 }

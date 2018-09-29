@@ -15,11 +15,11 @@ public class SuccessResponse implements SingleMessageResponse {
 
     @Override
     public String getMessage() {
-        return null;
+        return message;
     }
 
     @Override
-    public void setMessage() {
-
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

@@ -1,6 +1,8 @@
 package app.rest.response.error;
 
-public class ErrorResponse {
+import app.rest.response.SingleMessageResponse;
+
+public class ErrorResponse implements SingleMessageResponse {
 
     private String message;
 
