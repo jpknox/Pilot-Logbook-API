@@ -50,4 +50,16 @@ class LogbookRestControllerTest {
                 .andExpect(MockMvcResultMatchers.status().is(200))
                 .andExpect(MockMvcResultMatchers.content().json(expectedBody));
     }
+
+    @Test
+    public void givenNoLogbook_whenGetLogbook_thenReturn404() throws Exception {
+        UUID logbookId = UUID.randomUUID();
+        String expectedBody = "";
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/localhost/" + logbookId.toString())
+        )
+                .andExpect(MockMvcResultMatchers.status().is(404))
+                .andExpect(MockMvcResultMatchers.content().string(expectedBody));
+
+    }
 }
