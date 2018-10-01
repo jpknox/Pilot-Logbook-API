@@ -24,7 +24,7 @@ public class Logbook {
         return true;
     }
 
-    public List<LogbookEntry> getAll() {
+    public List<LogbookEntry> getAllEntries() {
         List<LogbookEntry> entriesToReturn = new LinkedList<>(entries);
         return entriesToReturn;
     }

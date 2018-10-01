@@ -46,7 +46,7 @@ class LogbookTest {
         LogbookEntry entry1 = logbookEntryBuilder.build();
         logbook.add(entry0);
         logbook.add(entry1);
-        List<LogbookEntry> entries = logbook.getAll();
+        List<LogbookEntry> entries = logbook.getAllEntries();
         assertEquals(2, entries.size());
         assertTrue(entries.contains(entry0));
         assertTrue(entries.contains(entry1));
@@ -55,7 +55,7 @@ class LogbookTest {
     @Test
     void testGetAll_ReturnedListIsntSameInstanceAsInternalList() {
         LogbookEntryBuilder logbookEntryBuilder = new LogbookEntryBuilder();
-        List<LogbookEntry> entries = logbook.getAll();
+        List<LogbookEntry> entries = logbook.getAllEntries();
         assertTrue(entries != internalList);
     }
 
