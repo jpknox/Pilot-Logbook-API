@@ -77,14 +77,7 @@ class LogbookRestControllerTest {
 
     @Test
     public void givenNoLogbook_whenCreateBook_thenReturnUUID_whenGetBook_thenReturnEmptyBook() throws Exception {
-        String expectedPayload_template = getText("logbookCreated_UuidRemoved.json");
-        String escapedExpectedPayload_template = escapeRegex(expectedPayload_template);
-        String expectedBody = String.format(
-                escapedExpectedPayload_template,
-                UUID_REGEX
-        );
-        Pattern pattern = Pattern.compile(expectedBody);
-        Matcher expectedBodyMatcher = new MatchesPattern(pattern);
+        Matcher expectedBodyMatcher = matcherForExpectedTextTemplate("logbookCreated_UuidRemoved.json", UUID_REGEX);
         String response =
                 mockMvc.perform(
                         MockMvcRequestBuilders.post("/logbooks")
@@ -93,17 +86,11 @@ class LogbookRestControllerTest {
                         .andExpect(content().string(expectedBodyMatcher))
                         .andReturn().getResponse().getContentAsString();
 
-        pattern = Pattern.compile(UUID_REGEX);
+        Pattern pattern = Pattern.compile(UUID_REGEX);
         java.util.regex.Matcher jMatcher = pattern.matcher(response);
         jMatcher.find();
         String logbookUuid = jMatcher.group();
-
-        expectedBody = String.format(
-                "\\{\"id\":\"%s\",\"allEntries\":\\[\\]\\}",
-                logbookUuid
-        );
-        pattern = Pattern.compile(expectedBody);
-        expectedBodyMatcher = new MatchesPattern(pattern);
+        expectedBodyMatcher = matcherForExpectedTextTemplate("emptyLogbook_UuidRemoved.json", logbookUuid);
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/logbooks/" + logbookUuid)
         )
@@ -123,6 +110,21 @@ class LogbookRestControllerTest {
     private String escapeRegex(String text) {
         return text.replaceAll("[{]", "\\\\{")
                 .replaceAll("[}]", "\\\\}")
-                .replaceAll("[\"]", "\\\\\"");
+                .replaceAll("[\"]", "\\\\\"")
+                .replaceAll("\\[", "\\\\[")
+                .replaceAll("\\]", "\\\\]");
+    }
+
+    private Matcher matcherForExpectedTextTemplate(String nameOfExpectedFile, String... substitutions)
+            throws IOException, URISyntaxException {
+        String expectedData_template = getText(nameOfExpectedFile);
+        String escapedExpectedData_template = escapeRegex(expectedData_template);
+        String expectedData = String.format(
+                escapedExpectedData_template,
+                (Object[]) substitutions
+        );
+        Pattern pattern = Pattern.compile(expectedData);
+        Matcher expectedDataMatcher = new MatchesPattern(pattern);
+        return expectedDataMatcher;
     }
 }
