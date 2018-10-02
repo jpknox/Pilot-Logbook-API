@@ -30,6 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 class LogbookRestControllerTest {
 
+    public static final String UUID_REGEX = "\\b[\\d\\D]{8}-[\\d\\D]{4}-[\\d\\D]{4}-[\\d\\D]{4}-[\\d\\D]{12}";
+
     private MockMvc mockMvc;
 
     @InjectMocks
@@ -37,7 +39,6 @@ class LogbookRestControllerTest {
 
     @Spy
     LogbookStorage logbookStorage = new HeapLogbookStorage();
-    public static final String UUID_REGEX = "\\b[\\d\\D]{8}-[\\d\\D]{4}-[\\d\\D]{4}-[\\d\\D]{4}-[\\d\\D]{12}";
 
     @BeforeEach
     void setUp() {
@@ -77,7 +78,9 @@ class LogbookRestControllerTest {
 
     @Test
     public void givenNoLogbook_whenCreateBook_thenReturnUUID_whenGetBook_thenReturnEmptyBook() throws Exception {
-        Matcher expectedBodyMatcher = matcherForExpectedTextTemplate("logbookCreated_UuidRemoved.json", UUID_REGEX);
+        Matcher expectedBodyMatcher = matcherForExpectedTextTemplate(
+                "logbookCreated_UuidRemoved.json",
+                UUID_REGEX);
         String response =
                 mockMvc.perform(
                         MockMvcRequestBuilders.post("/logbooks")
@@ -90,7 +93,9 @@ class LogbookRestControllerTest {
         java.util.regex.Matcher jMatcher = pattern.matcher(response);
         jMatcher.find();
         String logbookUuid = jMatcher.group();
-        expectedBodyMatcher = matcherForExpectedTextTemplate("emptyLogbook_UuidRemoved.json", logbookUuid);
+        expectedBodyMatcher = matcherForExpectedTextTemplate(
+                "emptyLogbook_UuidRemoved.json",
+                logbookUuid);
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/logbooks/" + logbookUuid)
         )
