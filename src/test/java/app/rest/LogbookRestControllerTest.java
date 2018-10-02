@@ -3,7 +3,6 @@ package app.rest;
 import app.data.HeapLogbookStorage;
 import app.data.LogbookStorage;
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.hamcrest.text.MatchesPattern;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,14 +13,17 @@ import org.mockito.Spy;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import static org.mockito.Matchers.matches;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -35,6 +37,7 @@ class LogbookRestControllerTest {
 
     @Spy
     LogbookStorage logbookStorage = new HeapLogbookStorage();
+    public static final String UUID_REGEX = "\\b[\\d\\D]{8}-[\\d\\D]{4}-[\\d\\D]{4}-[\\d\\D]{4}-[\\d\\D]{12}";
 
     @BeforeEach
     void setUp() {
@@ -72,21 +75,23 @@ class LogbookRestControllerTest {
 
     @Test
     public void givenNoLogbook_whenCreateBook_thenReturnUUID_whenGetBook_thenReturnEmptyBook() throws Exception {
-        String uuidRegex = "\\b[\\d\\D]{8}-[\\d\\D]{4}-[\\d\\D]{4}-[\\d\\D]{4}-[\\d\\D]{12}";
+        String expectedPayload_template = getText("logbookCreated_UuidRemoved.json");
+        String escapedExpectedPayload_template = escapeRegex(expectedPayload_template);
         String expectedBody = String.format(
-                "\\{\"message\":\"Logbook created. Its ID is '%s'.\"\\}",
-                uuidRegex
+                escapedExpectedPayload_template,
+                UUID_REGEX
         );
         Pattern pattern = Pattern.compile(expectedBody);
-        Matcher matcher = new MatchesPattern(pattern);
-        String response = mockMvc.perform(
-                MockMvcRequestBuilders.post("/logbooks")
-        )
-                .andExpect(status().is(200))
-                .andExpect(content().string(matcher))
-                .andReturn().getResponse().getContentAsString();
+        Matcher expectedBodyMatcher = new MatchesPattern(pattern);
+        String response =
+                mockMvc.perform(
+                        MockMvcRequestBuilders.post("/logbooks")
+                )
+                        .andExpect(status().is(200))
+                        .andExpect(content().string(expectedBodyMatcher))
+                        .andReturn().getResponse().getContentAsString();
 
-        pattern = Pattern.compile(uuidRegex);
+        pattern = Pattern.compile(UUID_REGEX);
         java.util.regex.Matcher jMatcher = pattern.matcher(response);
         jMatcher.find();
         String logbookUuid = jMatcher.group();
@@ -96,11 +101,26 @@ class LogbookRestControllerTest {
                 logbookUuid
         );
         pattern = Pattern.compile(expectedBody);
-        matcher = new MatchesPattern(pattern);
+        expectedBodyMatcher = new MatchesPattern(pattern);
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/logbooks/" + logbookUuid)
         )
                 .andExpect(status().is(200))
-                .andExpect(content().string(matcher));
+                .andExpect(content().string(expectedBodyMatcher));
+    }
+
+    private String getText(String path) throws URISyntaxException, IOException {
+        URI u = Thread.currentThread().getContextClassLoader().getResource(path).toURI();
+        File f = new File(u);
+        Path p = f.toPath();
+        byte[] bytes = Files.readAllBytes(p);
+        String s = new String(bytes);
+        return s;
+    }
+
+    private String escapeRegex(String text) {
+        return text.replaceAll("[{]", "\\\\{")
+                .replaceAll("[}]", "\\\\}")
+                .replaceAll("[\"]", "\\\\\"");
     }
 }
