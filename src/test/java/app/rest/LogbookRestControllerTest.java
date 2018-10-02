@@ -48,17 +48,19 @@ class LogbookRestControllerTest {
 
     @Test
     public void givenNoLogbook_whenCreateLogbook_thenReturnUuid() throws Exception {
-        UUID logbookId = UUID.randomUUID();
-        when(logbookStorage.create()).thenReturn(logbookId);        //TODO: Remove mocking
+        String expectedPayload_template = getText("logbookCreated_UuidRemoved.json");
+        String escapedExpectedPayload_template = escapeRegex(expectedPayload_template);
         String expectedBody = String.format(
-                "{ \"message\": \"Logbook created. Its ID is '%s'.\" }",
-                logbookId.toString()
+                escapedExpectedPayload_template,
+                UUID_REGEX
         );
+        Pattern pattern = Pattern.compile(expectedBody);
+        Matcher expectedBodyMatcher = new MatchesPattern(pattern);
         mockMvc.perform(
                 MockMvcRequestBuilders.post("/logbooks")
         )
                 .andExpect(status().is(200))
-                .andExpect(content().json(expectedBody));
+                .andExpect(content().string(expectedBodyMatcher));
     }
 
     @Test
