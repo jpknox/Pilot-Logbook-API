@@ -18,12 +18,13 @@ import java.util.UUID;
 public class LogbookRestController {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
-    
+
     @Autowired
     private LogbookStorage logbookStorage;
 
-    @RequestMapping(path = "/logbooks/{logbookId}",
-                    method = RequestMethod.GET)
+    @RequestMapping(
+            path = "/logbooks/{logbookId}",
+            method = RequestMethod.GET)
     public ResponseEntity<Object> getLogbook(@PathVariable("logbookId") UUID logbookId) {
         Logbook logbook = logbookStorage.get(logbookId);
         if (logbook == null) {
@@ -34,8 +35,9 @@ public class LogbookRestController {
         return ResponseEntity.status(200).body(logbook);
     }
 
-    @RequestMapping(path = "/logbooks",
-                    method = RequestMethod.POST)
+    @RequestMapping(
+            path = "/logbooks",
+            method = RequestMethod.POST)
     public ResponseEntity<Object> createLogbook() {
         UUID logbookId = logbookStorage.create();
         if (logbookId != null) {
@@ -45,8 +47,9 @@ public class LogbookRestController {
         return ResponseEntity.status(201).body(new SuccessSingleMessageResponse(responseMessage));
     }
 
-    @RequestMapping(path = "/logbooks/{logbookId}/entries",
-                    method = RequestMethod.POST)
+    @RequestMapping(
+            path = "/logbooks/{logbookId}/entries",
+            method = RequestMethod.POST)
     public ResponseEntity<Object> createEntry(@PathVariable("logbookId") UUID logbookId,
                                               @RequestBody LogbookEntry logbookEntry) {
         Logbook logbook = logbookStorage.get(logbookId);
@@ -65,8 +68,9 @@ public class LogbookRestController {
         return ResponseEntity.status(400).body(new ErrorSingleMessageResponse(errorMessage));
     }
 
-    @RequestMapping(path = "/logbooks/{logbookId}/entries/{entryId}",
-                    method = RequestMethod.DELETE)
+    @RequestMapping(
+            path = "/logbooks/{logbookId}/entries/{entryId}",
+            method = RequestMethod.DELETE)
     public ResponseEntity<Object> deleteEntry(@PathVariable("logbookId") UUID logbookId,
                                               @PathVariable("entryId") UUID entryId) {
         Logbook logbook = logbookStorage.get(logbookId);
@@ -82,6 +86,32 @@ public class LogbookRestController {
         } else {
             return ResponseEntity.status(500).body(new ErrorSingleMessageResponse("An error has occurred."));
         }
+    }
+
+    @RequestMapping(
+            path = "/logbooks/{logbookId}/entries/{entryId}",
+            method = RequestMethod.PUT)
+    public ResponseEntity<Object> updateEntry(@PathVariable("logbookId") UUID logbookId,
+                                              @PathVariable("entryId") UUID entryId,
+                                              @RequestBody LogbookEntry logbookEntry) {
+        Logbook logbook = logbookStorage.get(logbookId);
+        if (logbook == null) {
+            return ResponseEntity.status(404).body(
+                    new ErrorSingleMessageResponse("Logbook doesn't exist.")
+            );
+        }
+        if (!logbook.containsEntry(entryId)) {
+            return ResponseEntity.status(404).body(
+                    new ErrorSingleMessageResponse("Entry doesn't exist.")
+            );
+        }
+        if (logbook.replace(entryId, logbookEntry)) {
+            return ResponseEntity.status(200).body(logbook);
+        }
+        return ResponseEntity.status(500).body(
+                new ErrorSingleMessageResponse("Something has gone wrong. " +
+                        "Please contact our system administrator.")
+        );
     }
 
 

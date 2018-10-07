@@ -29,15 +29,11 @@ public class Logbook {
         return entriesToReturn;
     }
 
-    public LogbookEntry get(UUID uuid) {
+    public Optional<LogbookEntry> get(UUID uuid) {
         Optional<LogbookEntry> optional = entries.stream()
                 .filter((e) -> e.getEntryId().equals(uuid))
                 .findFirst();
-        if (optional.isPresent()) {
-            return optional.get();
-        } else {
-            return null;
-        }
+        return optional;
     }
 
     public boolean containsEntry(UUID entryId) {
@@ -53,6 +49,19 @@ public class Logbook {
                 .findFirst();
         if (optional.isPresent()) {
             entries.remove(optional.get());
+            return true;
+        }
+        return false;
+    }
+
+    public boolean replace(UUID entryId, LogbookEntry newLogbookEntry) {
+        Optional<LogbookEntry> optional = get(entryId);
+
+        if (optional.isPresent()) {
+            LogbookEntry oldEntry = optional.get();
+            remove(oldEntry.getEntryId());
+            oldEntry.overwriteWith(newLogbookEntry);
+            add(oldEntry);
             return true;
         }
         return false;

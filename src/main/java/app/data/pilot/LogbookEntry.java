@@ -161,4 +161,20 @@ public class LogbookEntry {
     public void setRemarks(String remarks) {
         this.remarks = remarks;
     }
+
+    public void overwriteWith(LogbookEntry replacement) {
+        date = replacement.getDate();
+        aircraft = replacement.getAircraft();
+        captain = replacement.getCaptain();
+        holdersOperatingCapacity = replacement.getHoldersOperatingCapacity();
+        origin = replacement.getOrigin();
+        destination = replacement.getDestination();
+        departure = replacement.getDeparture();
+        arrival = replacement.getArrival();
+        singleEngineP1TimeMins = replacement.getSingleEngineP1TimeMins();
+        singleEngineP2TimeMins = replacement.getSingleEngineP2TimeMins();
+        numOfTakeoffs = replacement.getNumOfTakeoffs();
+        numOfLandings = replacement.getNumOfLandings();
+        remarks = replacement.getRemarks();
+    }
 }

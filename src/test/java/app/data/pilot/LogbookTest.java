@@ -64,7 +64,7 @@ class LogbookTest {
         LogbookEntryBuilder logbookEntryBuilder = new LogbookEntryBuilder();
         LogbookEntry entry = logbookEntryBuilder.build();
         logbook.add(entry);
-        LogbookEntry returnedEntry = logbook.get(entry.getEntryId());
+        LogbookEntry returnedEntry = logbook.get(entry.getEntryId()).get();
         assertEquals(entry, returnedEntry);
     }
 
