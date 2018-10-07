@@ -3,9 +3,8 @@ package app.rest;
 import app.data.HeapLogbookStorage;
 import app.data.LogbookStorage;
 import com.jayway.jsonpath.JsonPath;
-import org.hamcrest.collection.IsArrayWithSize;
+import org.hamcrest.collection.IsEmptyCollection;
 import org.hamcrest.text.MatchesPattern;
-import org.json.JSONArray;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,11 +24,10 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 import static org.hamcrest.collection.IsArrayWithSize.arrayWithSize;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
 import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static util.TestData.getText;
 
@@ -63,7 +61,7 @@ class LogbookRestControllerTest {
         String actualPayload = mockMvc.perform(
                 post("/logbooks")
         )
-                .andExpect(status().is(200))
+                .andExpect(status().is(201))
                 .andReturn().getResponse().getContentAsString();
         String expectedPayload = getText("rest/expected/logbookCreated_UuidRemoved.json");
         assertEquals(
@@ -108,7 +106,7 @@ class LogbookRestControllerTest {
                 mockMvc.perform(
                         post("/logbooks")
                 )
-                        .andExpect(status().is(200))
+                        .andExpect(status().is(201))
                         .andReturn().getResponse().getContentAsString();
 
         String expectedPayload = getText("rest/expected/logbookCreated_UuidRemoved.json");
@@ -170,7 +168,7 @@ class LogbookRestControllerTest {
                 mockMvc.perform(
                         post("/logbooks")
                 )
-                        .andExpect(status().is(200))
+                        .andExpect(status().is(201))
                         .andReturn().getResponse().getContentAsString();
 
         String expectedPayload = getText("rest/expected/logbookCreated_UuidRemoved.json");
@@ -201,7 +199,7 @@ class LogbookRestControllerTest {
                         .content(entry_RequestBody)
                         .contentType(MediaType.APPLICATION_JSON)
         )
-                .andExpect(status().is(200))
+                .andExpect(status().is(201))
                 .andExpect(jsonPath("$.id", is(logbookUuid)))
                 .andExpect(jsonPath("$.allEntries[0].entryId", MatchesPattern.matchesPattern(uuidPattern)))
                 .andExpect(jsonPath("$.allEntries[0].date[0]", is(2018)))
@@ -261,7 +259,7 @@ class LogbookRestControllerTest {
         )
                 .andExpect(status().is(200))
                 .andExpect(jsonPath("$.id", is(logbookUuid)))
-                .andExpect(jsonPath("$.allEntries", arrayWithSize(0)));
+                .andExpect(jsonPath("$.allEntries", empty()));
     }
 
 

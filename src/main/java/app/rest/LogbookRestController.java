@@ -42,7 +42,7 @@ public class LogbookRestController {
             logger.info("Created new logbook that has the id '" + logbookId + "'.");
         }
         String responseMessage = String.format("Logbook created. Its ID is '%s'.", logbookId);
-        return ResponseEntity.status(200).body(new SuccessSingleMessageResponse(responseMessage));
+        return ResponseEntity.status(201).body(new SuccessSingleMessageResponse(responseMessage));
     }
 
     @RequestMapping(path = "/logbooks/{logbookId}/entries",
@@ -58,7 +58,7 @@ public class LogbookRestController {
         boolean replaced = logbookStorage.replace(logbook);
         if (replaced) {
             logger.info("New aircraft added to logbook '" + logbookId + "'.");
-            return ResponseEntity.status(200).body(logbook);
+            return ResponseEntity.status(201).body(logbook);
         }
         String errorMessage = String.format("An error occurred whilst updating logbook identified by ID '%s'.", logbookId);
         logger.info(errorMessage);
