@@ -1,8 +1,8 @@
 package app.rest;
 
-import app.control.LogbookController;
-import app.data.HeapLogbookStorage;
-import app.data.LogbookStorage;
+import app.control.LogbookService;
+import app.data.LogbookHeapRepository;
+import app.data.LogbookRepository;
 import com.jayway.jsonpath.JsonPath;
 import org.hamcrest.text.MatchesPattern;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,25 +32,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static util.TestData.getText;
 
 @ExtendWith(SpringExtension.class)
-class LogbookRestInterfaceTest {
+class LogbookControllerTest {
 
     public static final String UUID_REGEX = "\\b[\\d\\D]{8}-[\\d\\D]{4}-[\\d\\D]{4}-[\\d\\D]{4}-[\\d\\D]{12}";
 
     private MockMvc mockMvc;
 
     @InjectMocks
-    LogbookRestInterface logbookRestInterface;
+    LogbookController logbookController;
 
     @Spy @InjectMocks
-    LogbookController logbookController = new LogbookController();
+    LogbookService logbookService = new LogbookService();
 
     @Spy
-    LogbookStorage logbookStorage = new HeapLogbookStorage();
+    LogbookRepository logbookRepository = new LogbookHeapRepository();
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.initMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(logbookRestInterface)
+        mockMvc = MockMvcBuilders.standaloneSetup(logbookController)
                 .build();
     }
 

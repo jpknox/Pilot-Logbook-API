@@ -1,13 +1,14 @@
 package app.data;
 
 import app.data.pilot.Logbook;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-@Component
-public class HeapLogbookStorage implements LogbookStorage {
+@Repository
+public class LogbookHeapRepository implements LogbookRepository {
 
     private Map<UUID, Logbook> logbooks = new HashMap<UUID, Logbook>();
 

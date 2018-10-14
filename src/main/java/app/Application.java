@@ -1,7 +1,7 @@
 package app;
 
-import app.data.HeapLogbookStorage;
-import app.data.LogbookStorage;
+import app.data.LogbookHeapRepository;
+import app.data.LogbookRepository;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -16,8 +16,8 @@ public class Application {
     }
 
     @Bean
-    public LogbookStorage logbookStorage() {
-        return new HeapLogbookStorage();
+    public LogbookRepository logbookStorage() {
+        return new LogbookHeapRepository();
     }
 
 }

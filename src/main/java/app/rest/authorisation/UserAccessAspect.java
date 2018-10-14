@@ -13,7 +13,7 @@ public class UserAccessAspect {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Before("execution(* app.rest.LogbookRestInterface.*(..))")
+    @Before("execution(* app.rest.LogbookController.*(..))")
     public void beforeHttpMethod(JoinPoint joinPoint) {
         String methodName = joinPoint.getSignature().getName();
         logger.info(String.format("User access lookup goes here... '%s'.", methodName));
