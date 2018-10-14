@@ -1,4 +1,4 @@
-package app.rest;
+package app.control;
 
 import app.data.LogbookStorage;
 import app.data.pilot.Logbook;
@@ -10,22 +10,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-@RestController
-public class LogbookRestController {
+@Component
+public class LogbookController {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
-    private LogbookStorage logbookStorage;
+    LogbookStorage logbookStorage;
 
-    @RequestMapping(
-            path = "/logbooks/{logbookId}",
-            method = RequestMethod.GET)
-    public ResponseEntity<Object> getLogbook(@PathVariable("logbookId") UUID logbookId) {
+    public ResponseEntity<Object> getLogbook(UUID logbookId) {
         Logbook logbook = logbookStorage.get(logbookId);
         if (logbook == null) {
             logger.info("Logbook not found for ID '" + logbookId + "'.");
@@ -35,9 +32,6 @@ public class LogbookRestController {
         return ResponseEntity.status(200).body(logbook);
     }
 
-    @RequestMapping(
-            path = "/logbooks",
-            method = RequestMethod.POST)
     public ResponseEntity<Object> createLogbook() {
         UUID logbookId = logbookStorage.create();
         if (logbookId != null) {
@@ -47,11 +41,7 @@ public class LogbookRestController {
         return ResponseEntity.status(201).body(new SuccessSingleMessageResponse(responseMessage));
     }
 
-    @RequestMapping(
-            path = "/logbooks/{logbookId}/entries",
-            method = RequestMethod.POST)
-    public ResponseEntity<Object> createEntry(@PathVariable("logbookId") UUID logbookId,
-                                              @RequestBody LogbookEntry logbookEntry) {
+    public ResponseEntity<Object> createLogbookEntry(UUID logbookId, LogbookEntry logbookEntry) {
         Logbook logbook = logbookStorage.get(logbookId);
         if (logbook == null) {
             logger.info("No logbook found for ID '" + logbookId + "'.");
@@ -68,11 +58,7 @@ public class LogbookRestController {
         return ResponseEntity.status(400).body(new ErrorSingleMessageResponse(errorMessage));
     }
 
-    @RequestMapping(
-            path = "/logbooks/{logbookId}/entries/{entryId}",
-            method = RequestMethod.DELETE)
-    public ResponseEntity<Object> deleteEntry(@PathVariable("logbookId") UUID logbookId,
-                                              @PathVariable("entryId") UUID entryId) {
+    public ResponseEntity<Object> deleteLogbookEntry(UUID logbookId, UUID entryId) {
         Logbook logbook = logbookStorage.get(logbookId);
         if (logbook == null) {
             return ResponseEntity.status(400).body(new ErrorSingleMessageResponse("Logbook doesn't exist."));
@@ -88,12 +74,7 @@ public class LogbookRestController {
         }
     }
 
-    @RequestMapping(
-            path = "/logbooks/{logbookId}/entries/{entryId}",
-            method = RequestMethod.PUT)
-    public ResponseEntity<Object> updateEntry(@PathVariable("logbookId") UUID logbookId,
-                                              @PathVariable("entryId") UUID entryId,
-                                              @RequestBody LogbookEntry logbookEntry) {
+    public ResponseEntity<Object> updateLogbookEntry(UUID logbookId, UUID entryId, LogbookEntry logbookEntry) {
         Logbook logbook = logbookStorage.get(logbookId);
         if (logbook == null) {
             return ResponseEntity.status(404).body(
@@ -113,6 +94,4 @@ public class LogbookRestController {
                         "Please contact our system administrator.")
         );
     }
-
-
 }
