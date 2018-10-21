@@ -1,0 +1,18 @@
+{
+  "date": "2018-09-21",
+  "aircraft": {
+	"type": "PA28",
+	"registration": "G-BBXW"
+  },
+  "captain": "João Paulo Knox",
+  "holdersOperatingCapacity": "P1",
+  "origin": "EGBJ",
+  "destination": "EGBJ",
+  "departure": "13:40",
+  "arrival": "14:40",
+  "singleEngineP1TimeMins": 0,
+  "singleEngineP2TimeMins": 60,
+  "numOfTakeoffs": 2,
+  "numOfLandings": 2,
+  "remarks": "Some slight chop."
+}

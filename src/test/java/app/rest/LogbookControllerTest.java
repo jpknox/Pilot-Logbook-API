@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.UUID;
@@ -75,7 +76,7 @@ class LogbookControllerTest {
         )
                 .andExpect(status().is(201))
                 .andReturn().getResponse().getContentAsString();
-        String expectedPayload = getText("rest/expected/logbookCreated_UuidRemoved.json");
+        String expectedPayload = getText("rest/expected/logbookCreated.json");
         assertJsonEquals(expectedPayload, actualPayload);
     }
 
@@ -112,7 +113,7 @@ class LogbookControllerTest {
                         .andExpect(status().is(201))
                         .andReturn().getResponse().getContentAsString();
 
-        String expectedPayload = getText("rest/expected/logbookCreated_UuidRemoved.json");
+        String expectedPayload = getText("rest/expected/logbookCreated.json");
         assertJsonEquals(expectedPayload, actualPayload);
 
         Pattern pattern = Pattern.compile(UUID_REGEX);
@@ -152,7 +153,7 @@ class LogbookControllerTest {
                         .andExpect(status().is(201))
                         .andReturn().getResponse().getContentAsString();
 
-        String expectedPayload = getText("rest/expected/logbookCreated_UuidRemoved.json");
+        String expectedPayload = getText("rest/expected/logbookCreated.json");
         assertJsonEquals(expectedPayload, actualResponse);
 
         String logbookUuid = getLogbookUuid(actualResponse);
@@ -165,7 +166,7 @@ class LogbookControllerTest {
                 .andExpect(status().is(201))
                 .andReturn().getResponse().getContentAsString();
 
-        expectedPayload = getText("rest/expected/logBook_oneEntry.json");
+        expectedPayload = getText("rest/expected/logbook_oneEntry_0.json");
         assertJsonEquals(expectedPayload, actualResponse);
         Assertions.assertEquals(logbookUuid, JsonPath.read(actualResponse, "$.id"));
 
@@ -198,6 +199,87 @@ class LogbookControllerTest {
         assertJsonEquals(expectedPayload, actualResponse);
         Assertions.assertEquals(logbookUuid, JsonPath.read(actualResponse, "$.id"));
         Assertions.assertEquals(new JSONArray(), JsonPath.read(actualResponse, "$.allEntries"));
+    }
+
+    /*
+     * Given no logbook.
+     * When create logbook.
+     * Then return UUID.
+     * When add new logbook entry.
+     * Then return logbook containing one entry.
+     * When update logbook entry.
+     * Then return logbook containing just the recently updated entry.
+     * When get logbook.
+     * Then return logbook containing one entry.
+     * When delete entry.
+     * Then return message stating success of deletion.
+     * When get logbook.
+     * Then return empty logbook.
+     */
+    @Test
+    public void add_update_delete_LogbookEntry() throws Exception {
+        String expectedPayload = getText("rest/expected/logbookCreated.json");
+        String actualPayload = mockMvc.perform(
+                MockMvcRequestBuilders.post("/logbooks")
+        )
+                .andExpect(status().is(201))
+                .andReturn().getResponse().getContentAsString();
+        assertJsonEquals(expectedPayload, actualPayload);
+
+        String logbookUuid = getLogbookUuid(actualPayload);
+
+        String entryRequestBody = getText("rest/mock/sampleEntry0.json");
+        actualPayload = mockMvc.perform(
+                MockMvcRequestBuilders.post("/logbooks/" + logbookUuid + "/entries")
+                .content(entryRequestBody)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+                .andExpect(status().is(201))
+                .andReturn().getResponse().getContentAsString();
+        expectedPayload = getText("rest/expected/logbook_oneEntry_0.json");
+        assertJsonEquals(expectedPayload, actualPayload);
+        Assertions.assertEquals(logbookUuid, JsonPath.read(actualPayload, "$.id"));
+
+        String entryId = JsonPath.read(actualPayload, "$.allEntries[0].entryId");
+
+        String updatedEntryRequestBody = getText("rest/mock/sampleEntry1.json");
+        actualPayload = mockMvc.perform(
+                MockMvcRequestBuilders.put("/logbooks/" + logbookUuid + "/entries/" + entryId)
+                .content(updatedEntryRequestBody)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+                .andExpect(status().is(200))
+                .andReturn().getResponse().getContentAsString();
+        expectedPayload = getText("rest/expected/logbook_oneEntry_1.json");
+        assertJsonEquals(expectedPayload, actualPayload);
+        Assertions.assertEquals(logbookUuid, JsonPath.read(actualPayload, "$.id"));
+        Assertions.assertEquals(entryId, JsonPath.read(actualPayload, "$.allEntries[0].entryId"));
+
+        actualPayload = mockMvc.perform(
+                MockMvcRequestBuilders.get("/logbooks/" + logbookUuid)
+        )
+                .andExpect(status().is(200))
+                .andReturn().getResponse().getContentAsString();
+        assertJsonEquals(expectedPayload, actualPayload);
+        Assertions.assertEquals(logbookUuid, JsonPath.read(actualPayload, "$.id"));
+        Assertions.assertEquals(entryId, JsonPath.read(actualPayload, "$.allEntries[0].entryId"));
+
+        actualPayload = mockMvc.perform(
+                MockMvcRequestBuilders.delete("/logbooks/" + logbookUuid + "/entries/" + entryId)
+        )
+                .andExpect(status().is(200))
+                .andReturn().getResponse().getContentAsString();
+        expectedPayload = getText("rest/expected/entryDeleted.json");
+        assertJsonEquals(expectedPayload, actualPayload);
+
+        actualPayload = mockMvc.perform(
+                MockMvcRequestBuilders.get("/logbooks/" + logbookUuid)
+        )
+                .andExpect(status().is(200))
+                .andReturn().getResponse().getContentAsString();
+        expectedPayload = getText("rest/expected/emptyLogbook.json");
+        assertJsonEquals(expectedPayload, actualPayload);
+        Assertions.assertEquals(logbookUuid, JsonPath.read(actualPayload, "$.id"));
     }
 
     private String getLogbookUuid(String jsonBody) {
