@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-@Repository
+
 public class LogbookHeapRepository implements LogbookRepository {
 
     private Map<UUID, Logbook> logbooks = new HashMap<UUID, Logbook>();

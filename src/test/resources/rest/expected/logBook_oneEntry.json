@@ -1,0 +1,24 @@
+{
+  "id":"${json-unit.regex}[\\w]{8}[-][\\w]{4}[-][\\w]{4}[-][\\w]{4}[-][\\w]{12}",
+  "allEntries": [
+	{
+	  "entryId": "${json-unit.regex}[\\w]{8}[-][\\w]{4}[-][\\w]{4}[-][\\w]{4}[-][\\w]{12}",
+	  "date": "2018-09-20",
+	  "aircraft": {
+		"type": "PA28",
+		"registration": "G-BASJ"
+	  },
+	  "captain": "João Paulo Knox",
+	  "holdersOperatingCapacity": "P2",
+	  "origin": "EGBJ",
+	  "destination": "EGBJ",
+	  "departure": "12:40:00",
+	  "arrival": "14:40:00",
+	  "singleEngineP1TimeMins": 0,
+	  "singleEngineP2TimeMins": 120,
+	  "numOfTakeoffs": 1,
+	  "numOfLandings": 1,
+	  "remarks": "Lovely weather"
+	}
+  ]
+}

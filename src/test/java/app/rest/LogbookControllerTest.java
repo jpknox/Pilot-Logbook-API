@@ -3,19 +3,20 @@ package app.rest;
 import app.control.LogbookService;
 import app.data.LogbookHeapRepository;
 import app.data.LogbookRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.jayway.jsonpath.JsonPath;
-import org.hamcrest.text.MatchesPattern;
+import net.minidev.json.JSONArray;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import org.skyscreamer.jsonassert.Customization;
-import org.skyscreamer.jsonassert.JSONCompareMode;
-import org.skyscreamer.jsonassert.RegularExpressionValueMatcher;
-import org.skyscreamer.jsonassert.comparator.CustomComparator;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -23,12 +24,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import static org.hamcrest.collection.IsArrayWithSize.arrayWithSize;
-import static org.hamcrest.collection.IsEmptyCollection.empty;
-import static org.hamcrest.core.Is.is;
-import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
+import static net.javacrumbs.jsonunit.JsonAssert.assertJsonEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static util.TestData.getText;
 
 @ExtendWith(SpringExtension.class)
@@ -41,7 +40,8 @@ class LogbookControllerTest {
     @InjectMocks
     LogbookController logbookController;
 
-    @Spy @InjectMocks
+    @Spy
+    @InjectMocks
     LogbookService logbookService = new LogbookService();
 
     @Spy
@@ -50,7 +50,16 @@ class LogbookControllerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.initMocks(this);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter =
+                new MappingJackson2HttpMessageConverter();
+        mappingJackson2HttpMessageConverter.setObjectMapper(objectMapper);
+
         mockMvc = MockMvcBuilders.standaloneSetup(logbookController)
+                .setMessageConverters(mappingJackson2HttpMessageConverter)
                 .build();
     }
 
@@ -67,16 +76,7 @@ class LogbookControllerTest {
                 .andExpect(status().is(201))
                 .andReturn().getResponse().getContentAsString();
         String expectedPayload = getText("rest/expected/logbookCreated_UuidRemoved.json");
-        assertEquals(
-                expectedPayload,
-                actualPayload,
-                new CustomComparator(
-                        JSONCompareMode.LENIENT,
-                        new Customization(
-                                "message",
-                                new RegularExpressionValueMatcher(
-                                        String.format("Logbook created. Its ID is '%s'.",
-                                                UUID_REGEX)))));
+        assertJsonEquals(expectedPayload, actualPayload);
     }
 
     /*
@@ -113,20 +113,7 @@ class LogbookControllerTest {
                         .andReturn().getResponse().getContentAsString();
 
         String expectedPayload = getText("rest/expected/logbookCreated_UuidRemoved.json");
-        assertEquals(
-                expectedPayload,
-                actualPayload,
-                new CustomComparator(
-                        JSONCompareMode.LENIENT,
-                        Customization.customization(
-                                "message",
-                                new RegularExpressionValueMatcher(
-                                        String.format("Logbook created. Its ID is '%s'.",
-                                                UUID_REGEX)
-                                )
-                        )
-                )
-        );
+        assertJsonEquals(expectedPayload, actualPayload);
 
         Pattern pattern = Pattern.compile(UUID_REGEX);
         java.util.regex.Matcher jMatcher = pattern.matcher(actualPayload);
@@ -138,18 +125,9 @@ class LogbookControllerTest {
         )
                 .andExpect(status().is(200))
                 .andReturn().getResponse().getContentAsString();
-        expectedPayload = getText("rest/expected/emptyLogbook_UuidRemoved.json");
-        assertEquals(
-                expectedPayload,
-                actualPayload,
-                new CustomComparator(
-                        JSONCompareMode.LENIENT,
-                        Customization.customization(
-                                "id",
-                                (o, t1) -> o.toString().equals(logbookUuid)
-                        )
-                )
-        );
+        expectedPayload = getText("rest/expected/emptyLogbook.json");
+        Assertions.assertEquals(JsonPath.read(actualPayload, "$.id"), logbookUuid);
+        assertJsonEquals(expectedPayload, actualPayload);
     }
 
     /*
@@ -167,7 +145,7 @@ class LogbookControllerTest {
      */
     @Test
     public void add_get_delete_LogbookEntry() throws Exception {
-        String actualPayload =
+        String actualResponse =
                 mockMvc.perform(
                         post("/logbooks")
                 )
@@ -175,95 +153,58 @@ class LogbookControllerTest {
                         .andReturn().getResponse().getContentAsString();
 
         String expectedPayload = getText("rest/expected/logbookCreated_UuidRemoved.json");
-        assertEquals(
-                expectedPayload,
-                actualPayload,
-                new CustomComparator(
-                        JSONCompareMode.LENIENT,
-                        Customization.customization(
-                                "message",
-                                new RegularExpressionValueMatcher(
-                                        String.format("Logbook created. Its ID is '%s'.",
-                                                UUID_REGEX)
-                                )
-                        )
-                )
-        );
+        assertJsonEquals(expectedPayload, actualResponse);
 
-        Pattern uuidPattern = Pattern.compile(UUID_REGEX);
-        java.util.regex.Matcher jMatcher = uuidPattern.matcher(actualPayload);
-        jMatcher.find();
-        String logbookUuid = jMatcher.group();
-
+        String logbookUuid = getLogbookUuid(actualResponse);
         String entry_RequestBody = getText("rest/mock/sampleEntry0.json");
-
-        mockMvc.perform(
+        actualResponse = mockMvc.perform(
                 post("/logbooks/" + logbookUuid + "/entries")
                         .content(entry_RequestBody)
                         .contentType(MediaType.APPLICATION_JSON)
         )
                 .andExpect(status().is(201))
-                .andExpect(jsonPath("$.id", is(logbookUuid)))
-                .andExpect(jsonPath("$.allEntries[0].entryId", MatchesPattern.matchesPattern(uuidPattern)))
-                .andExpect(jsonPath("$.allEntries[0].date[0]", is(2018)))
-                .andExpect(jsonPath("$.allEntries[0].date[1]", is(9)))
-                .andExpect(jsonPath("$.allEntries[0].date[2]", is(20)))
-                .andExpect(jsonPath("$.allEntries[0].aircraft.type", is("PA28")))
-                .andExpect(jsonPath("$.allEntries[0].aircraft.registration", is("G-BASJ")))
-                .andExpect(jsonPath("$.allEntries[0].captain", is("João Paulo Knox")))
-                .andExpect(jsonPath("$.allEntries[0].holdersOperatingCapacity", is("P2")))
-                .andExpect(jsonPath("$.allEntries[0].origin", is("EGBJ")))
-                .andExpect(jsonPath("$.allEntries[0].destination", is("EGBJ")))
-                .andExpect(jsonPath("$.allEntries[0].departure[0]", is(12)))
-                .andExpect(jsonPath("$.allEntries[0].departure[1]", is(40)))
-                .andExpect(jsonPath("$.allEntries[0].arrival[0]", is(14)))
-                .andExpect(jsonPath("$.allEntries[0].arrival[1]", is(40)))
-                .andExpect(jsonPath("$.allEntries[0].singleEngineP1TimeMins", is(0)))
-                .andExpect(jsonPath("$.allEntries[0].singleEngineP2TimeMins", is(120)))
-                .andExpect(jsonPath("$.allEntries[0].numOfTakeoffs", is(1)))
-                .andExpect(jsonPath("$.allEntries[0].numOfLandings", is(1)))
-                .andExpect(jsonPath("$.allEntries[0].remarks", is("Lovely weather")));
-
-        String response = mockMvc.perform(
-                get("/logbooks/" + logbookUuid)
-        )
-                .andExpect(status().is(200))
-                .andExpect(jsonPath("$.id", is(logbookUuid)))
-                .andExpect(jsonPath("$.allEntries[0].entryId", MatchesPattern.matchesPattern(uuidPattern)))
-                .andExpect(jsonPath("$.allEntries[0].date[0]", is(2018)))
-                .andExpect(jsonPath("$.allEntries[0].date[1]", is(9)))
-                .andExpect(jsonPath("$.allEntries[0].date[2]", is(20)))
-                .andExpect(jsonPath("$.allEntries[0].aircraft.type", is("PA28")))
-                .andExpect(jsonPath("$.allEntries[0].aircraft.registration", is("G-BASJ")))
-                .andExpect(jsonPath("$.allEntries[0].captain", is("João Paulo Knox")))
-                .andExpect(jsonPath("$.allEntries[0].holdersOperatingCapacity", is("P2")))
-                .andExpect(jsonPath("$.allEntries[0].origin", is("EGBJ")))
-                .andExpect(jsonPath("$.allEntries[0].destination", is("EGBJ")))
-                .andExpect(jsonPath("$.allEntries[0].departure[0]", is(12)))
-                .andExpect(jsonPath("$.allEntries[0].departure[1]", is(40)))
-                .andExpect(jsonPath("$.allEntries[0].arrival[0]", is(14)))
-                .andExpect(jsonPath("$.allEntries[0].arrival[1]", is(40)))
-                .andExpect(jsonPath("$.allEntries[0].singleEngineP1TimeMins", is(0)))
-                .andExpect(jsonPath("$.allEntries[0].singleEngineP2TimeMins", is(120)))
-                .andExpect(jsonPath("$.allEntries[0].numOfTakeoffs", is(1)))
-                .andExpect(jsonPath("$.allEntries[0].numOfLandings", is(1)))
-                .andExpect(jsonPath("$.allEntries[0].remarks", is("Lovely weather")))
                 .andReturn().getResponse().getContentAsString();
 
-        String entryUuid = JsonPath.read(response, "$.allEntries[0].entryId");
-        mockMvc.perform(
+        expectedPayload = getText("rest/expected/logBook_oneEntry.json");
+        assertJsonEquals(expectedPayload, actualResponse);
+        Assertions.assertEquals(logbookUuid, JsonPath.read(actualResponse, "$.id"));
+
+        actualResponse = mockMvc.perform(
+                get("/logbooks/" + logbookUuid).contentType(MediaType.APPLICATION_JSON)
+        )
+                .andExpect(status().is(200))
+                .andReturn().getResponse().getContentAsString();
+
+        assertJsonEquals(expectedPayload, actualResponse);
+        Assertions.assertEquals(logbookUuid, JsonPath.read(actualResponse, "$.id"));
+
+        String entryUuid = JsonPath.read(actualResponse, "$.allEntries[0].entryId");
+        actualResponse = mockMvc.perform(
                 delete("/logbooks/" + logbookUuid + "/entries/" + entryUuid)
         )
                 .andExpect(status().is(200))
-                .andExpect(jsonPath("$.message", is("Entry deleted.")));
+                .andReturn().getResponse().getContentAsString();
+        expectedPayload = getText("rest/expected/entryDeleted.json");
+        assertJsonEquals(expectedPayload, actualResponse);
 
-        mockMvc.perform(
+        actualResponse = mockMvc.perform(
                 get("/logbooks/" + logbookUuid)
         )
                 .andExpect(status().is(200))
-                .andExpect(jsonPath("$.id", is(logbookUuid)))
-                .andExpect(jsonPath("$.allEntries", empty()));
+                .andReturn().getResponse().getContentAsString();
+                //.andExpect(jsonPath("$.id", is(logbookUuid)))
+                //.andExpect(jsonPath("$.allEntries", empty()));
+        expectedPayload = getText("rest/expected/emptyLogbook.json");
+        assertJsonEquals(expectedPayload, actualResponse);
+        Assertions.assertEquals(logbookUuid, JsonPath.read(actualResponse, "$.id"));
+        Assertions.assertEquals(new JSONArray(), JsonPath.read(actualResponse, "$.allEntries"));
     }
 
+    private String getLogbookUuid(String jsonBody) {
+        Pattern uuidPattern = Pattern.compile(UUID_REGEX);
+        java.util.regex.Matcher jMatcher = uuidPattern.matcher(jsonBody);
+        jMatcher.find();
+        return jMatcher.group();
+    }
 
 }
