@@ -21,19 +21,19 @@ public class LogbookService {
     LogbookRepository logbookRepository;
 
     public Optional<Logbook> getLogbook(UUID logbookId) {
-        return Optional.of(
+        return Optional.ofNullable(
                 logbookRepository.get(logbookId)
         );
     }
 
     public Optional<UUID> createLogbook() {
-        return Optional.of(
+        return Optional.ofNullable(
                 logbookRepository.create()
         );
     }
 
     public LogbookWithEntryCreationStatusDto createLogbookEntry(UUID logbookId, LogbookEntry logbookEntry) {
-        Optional optional = Optional.of(logbookRepository.get(logbookId));
+        Optional optional = Optional.ofNullable(logbookRepository.get(logbookId));
         if (!optional.isPresent()) {
             return new LogbookWithEntryCreationStatusDto(null, CreationStatus.LOGBOOK_NOT_FOUND);
         }
@@ -47,7 +47,7 @@ public class LogbookService {
     }
 
     public DeletionStatus deleteLogbookEntry(UUID logbookId, UUID entryId) {
-        Optional optional = Optional.of(logbookRepository.get(logbookId));
+        Optional optional = Optional.ofNullable(logbookRepository.get(logbookId));
         if (!optional.isPresent()) {
             return DeletionStatus.LOGBOOK_NOT_FOUND;
         }
