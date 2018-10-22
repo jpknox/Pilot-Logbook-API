@@ -55,6 +55,7 @@ public class LogbookController {
                         String.format("Logbook created. Its ID is '%s'.", optional.get())
                 )
         );
+        //TODO: Return error response when no logbook is created
     }
 
     @RequestMapping(
