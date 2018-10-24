@@ -3,8 +3,8 @@ package app.rest;
 import app.control.LogbookService;
 import app.data.pilot.Logbook;
 import app.data.pilot.LogbookEntry;
-import app.data.transfer.internal.logbook.CreationStatus;
-import app.data.transfer.internal.logbook.LogbookWithEntryCreationStatusDto;
+import app.data.transfer.internal.logbook.*;
+import app.rest.response.error.ErrorSingleMessageResponse;
 import app.rest.response.success.SuccessSingleMessageResponse;
 import name.falgout.jeffrey.testing.junit.mockito.MockitoExtension;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +21,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class LogbookControllerTest {
@@ -41,7 +41,7 @@ public class LogbookControllerTest {
     public void getLogbook_mockedLogbookIsReturned() {
         Logbook logbook = new Logbook();
         logbook.add(new LogbookEntry());
-        Mockito.when(logbookService.getLogbook(Mockito.any(UUID.class)))
+        when(logbookService.getLogbook(any(UUID.class)))
                 .thenReturn(Optional.of(logbook));
         ResponseEntity<Object> responseEntity = logbookController.getLogbook(UUID.randomUUID());
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -50,7 +50,7 @@ public class LogbookControllerTest {
 
     @Test
     public void getLogbook_mockedNullLogbookResultsIn404() {
-        Mockito.when(logbookService.getLogbook(Mockito.any(UUID.class)))
+        when(logbookService.getLogbook(any(UUID.class)))
                 .thenReturn(Optional.ofNullable(null));
         ResponseEntity<Object> responseEntity =
                 logbookController.getLogbook(UUID.randomUUID());
@@ -61,7 +61,7 @@ public class LogbookControllerTest {
     @Test
     public void createLogbook_mockedUuidIsReturned() {
         UUID uuid = UUID.randomUUID();
-        Mockito.when(logbookService.createLogbook())
+        when(logbookService.createLogbook())
                 .thenReturn(Optional.of(uuid));
         ResponseEntity<Object> responseEntity =
                 logbookController.createLogbook();
@@ -73,11 +73,11 @@ public class LogbookControllerTest {
 
     @Test
     public void createEntry_mockEntryCreated() {
-        Logbook logbook = Mockito.mock(Logbook.class);
-        LogbookWithEntryCreationStatusDto dto = Mockito.mock(LogbookWithEntryCreationStatusDto.class);
-        Mockito.when(dto.getUpdateStatus()).thenReturn(CreationStatus.ENTRY_CREATED);
-        Mockito.when(dto.getLogbook()).thenReturn(logbook);
-        Mockito.when(logbookService.createLogbookEntry(Mockito.any(UUID.class), Mockito.any(LogbookEntry.class)))
+        Logbook logbook = mock(Logbook.class);
+        LogbookWithEntryCreationStatusDto dto = mock(LogbookWithEntryCreationStatusDto.class);
+        when(dto.getCreationStatus()).thenReturn(CreationStatus.ENTRY_CREATED);
+        when(dto.getLogbook()).thenReturn(logbook);
+        when(logbookService.createLogbookEntry(any(UUID.class), any(LogbookEntry.class)))
                 .thenReturn(dto);
         ResponseEntity<Object> responseEntity =
                 logbookController.createEntry(UUID.randomUUID(), new LogbookEntry());
@@ -87,52 +87,178 @@ public class LogbookControllerTest {
 
     @Test
     public void createEntry_mockLogbookNotFound() {
-        fail();
+        LogbookEntry logbookEntry = mock(LogbookEntry.class);
+        UUID uuid = UUID.randomUUID();
+        LogbookWithEntryCreationStatusDto dto = mock(LogbookWithEntryCreationStatusDto.class);
+        when(dto.getCreationStatus()).thenReturn(CreationStatus.LOGBOOK_NOT_FOUND);
+        when(logbookService.createLogbookEntry(any(UUID.class), any(LogbookEntry.class)))
+            .thenReturn(dto);
+        ResponseEntity<Object> responseEntity =
+                logbookController.createEntry(uuid, logbookEntry);
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+        assertEquals(
+                "No logbook exists for that ID.",
+                ((ErrorSingleMessageResponse) responseEntity.getBody()).getMessage()
+        );
     }
 
     @Test
     public void createEntry_mockErrorCreatingEntry() {
-        fail();
+        LogbookEntry logbookEntry = mock(LogbookEntry.class);
+        UUID uuid = UUID.randomUUID();
+        LogbookWithEntryCreationStatusDto dto = mock(LogbookWithEntryCreationStatusDto.class);
+        when(dto.getCreationStatus()).thenReturn(CreationStatus.ERROR_CREATING_ENTRY);
+        when(logbookService.createLogbookEntry(any(UUID.class), any(LogbookEntry.class)))
+                .thenReturn(dto);
+        ResponseEntity<Object> responseEntity =
+                logbookController.createEntry(uuid, logbookEntry);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals(
+                String.format(
+                        "An error occurred whilst updating logbook identified by ID '%s'.",
+                        uuid.toString()
+                ),
+                ((ErrorSingleMessageResponse) responseEntity.getBody()).getMessage()
+        );
     }
 
     @Test
     public void deleteEntry_mockLogbookNotFound() {
-        fail();
+        UUID logbookUuid = UUID.randomUUID();
+        UUID entryUuid = UUID.randomUUID();
+        DeletionStatus deletionStatus = DeletionStatus.LOGBOOK_NOT_FOUND;
+        when(logbookService.deleteLogbookEntry(any(UUID.class), any(UUID.class)))
+                .thenReturn(deletionStatus);
+        ResponseEntity<Object> responseEntity =
+                logbookController.deleteEntry(logbookUuid, entryUuid);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals(
+                "Logbook doesn't exist.",
+                ((ErrorSingleMessageResponse) responseEntity.getBody()).getMessage()
+        );
     }
 
     @Test
     public void deleteEntry_mockEntryNotFound() {
-        fail();
+        UUID logbookUuid = UUID.randomUUID();
+        UUID entryUuid = UUID.randomUUID();
+        DeletionStatus deletionStatus = DeletionStatus.ENTRY_NOT_FOUND;
+        when(logbookService.deleteLogbookEntry(any(UUID.class), any(UUID.class)))
+                .thenReturn(deletionStatus);
+        ResponseEntity<Object> responseEntity =
+                logbookController.deleteEntry(logbookUuid, entryUuid);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals(
+                "Entry doesn't exist.",
+                ((ErrorSingleMessageResponse) responseEntity.getBody()).getMessage()
+        );
     }
 
     @Test
     public void deleteEntry_mockEntryDeleted() {
-        fail();
+        UUID logbookUuid = UUID.randomUUID();
+        UUID entryUuid = UUID.randomUUID();
+        DeletionStatus deletionStatus = DeletionStatus.ENTRY_DELETED;
+        when(logbookService.deleteLogbookEntry(any(UUID.class), any(UUID.class)))
+                .thenReturn(deletionStatus);
+        ResponseEntity<Object> responseEntity =
+                logbookController.deleteEntry(logbookUuid, entryUuid);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(
+                "Entry deleted.",
+                ((SuccessSingleMessageResponse) responseEntity.getBody()).getMessage()
+        );
     }
 
     @Test
     public void deleteEntry_mockErrorDeletingEntry() {
-        fail();
+        UUID logbookUuid = UUID.randomUUID();
+        UUID entryUuid = UUID.randomUUID();
+        DeletionStatus deletionStatus = DeletionStatus.ERROR_DELETING_ENTRY;
+        when(logbookService.deleteLogbookEntry(any(UUID.class), any(UUID.class)))
+                .thenReturn(deletionStatus);
+        ResponseEntity<Object> responseEntity =
+                logbookController.deleteEntry(logbookUuid, entryUuid);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+        assertEquals(
+                "An error has occurred.",
+                ((ErrorSingleMessageResponse) responseEntity.getBody()).getMessage()
+        );
     }
 
     @Test
     public void updateEntry_mockLogbookNotFound() {
-        fail();
+        UUID logbookUuid = UUID.randomUUID();
+        UUID entryUuid = UUID.randomUUID();
+        LogbookEntry logbookEntry = mock(LogbookEntry.class);
+        LogbookWithEntryUpdateStatusDto dto =
+                mock(LogbookWithEntryUpdateStatusDto.class);
+        when(dto.getUpdateStatus()).thenReturn(UpdateStatus.LOGBOOK_NOT_FOUND);
+        when(logbookService.updateLogbookEntry(any(UUID.class), any(UUID.class), any(LogbookEntry.class)))
+                .thenReturn(dto);
+        ResponseEntity<Object> responseEntity =
+                logbookController.updateEntry(logbookUuid, entryUuid, logbookEntry);
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+        assertEquals(
+                "Logbook doesn't exist.",
+                ((ErrorSingleMessageResponse) responseEntity.getBody()).getMessage()
+        );
     }
 
     @Test
     public void updateEntry_mockEntryNotFound() {
-        fail();
+        UUID logbookUuid = UUID.randomUUID();
+        UUID entryUuid = UUID.randomUUID();
+        LogbookEntry logbookEntry = mock(LogbookEntry.class);
+        LogbookWithEntryUpdateStatusDto dto =
+                mock(LogbookWithEntryUpdateStatusDto.class);
+        when(dto.getUpdateStatus()).thenReturn(UpdateStatus.ENTRY_NOT_FOUND);
+        when(logbookService.updateLogbookEntry(any(UUID.class), any(UUID.class), any(LogbookEntry.class)))
+                .thenReturn(dto);
+        ResponseEntity<Object> responseEntity =
+                logbookController.updateEntry(logbookUuid, entryUuid, logbookEntry);
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+        assertEquals(
+                "Entry doesn't exist.",
+                ((ErrorSingleMessageResponse) responseEntity.getBody()).getMessage()
+        );
     }
 
     @Test
     public void updateEntry_mockEntryUpdated() {
-        fail();
+        UUID logbookUuid = UUID.randomUUID();
+        UUID entryUuid = UUID.randomUUID();
+        Logbook logbook = mock(Logbook.class);
+        LogbookEntry logbookEntry = mock(LogbookEntry.class);
+        LogbookWithEntryUpdateStatusDto dto =
+                mock(LogbookWithEntryUpdateStatusDto.class);
+        when(dto.getUpdateStatus()).thenReturn(UpdateStatus.ENTRY_UPDATED);
+        when(dto.getLogbook()).thenReturn(logbook);
+        when(logbookService.updateLogbookEntry(any(UUID.class), any(UUID.class), any(LogbookEntry.class)))
+                .thenReturn(dto);
+        ResponseEntity<Object> responseEntity =
+                logbookController.updateEntry(logbookUuid, entryUuid, logbookEntry);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(logbook, responseEntity.getBody());
     }
 
     @Test
     public void updateEntry_mockErrorUpdatingEntry() {
-        fail();
+        UUID logbookUuid = UUID.randomUUID();
+        UUID entryUuid = UUID.randomUUID();
+        LogbookEntry logbookEntry = mock(LogbookEntry.class);
+        LogbookWithEntryUpdateStatusDto dto =
+                mock(LogbookWithEntryUpdateStatusDto.class);
+        when(dto.getUpdateStatus()).thenReturn(UpdateStatus.ERROR_UPDATING_ENTRY);
+        when(logbookService.updateLogbookEntry(any(UUID.class), any(UUID.class), any(LogbookEntry.class)))
+                .thenReturn(dto);
+        ResponseEntity<Object> responseEntity =
+                logbookController.updateEntry(logbookUuid, entryUuid, logbookEntry);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+        assertEquals(
+                "Something has gone wrong. Please contact our system administrator.",
+                ((ErrorSingleMessageResponse) responseEntity.getBody()).getMessage()
+        );
     }
 
 

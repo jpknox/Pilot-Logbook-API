@@ -20,7 +20,7 @@ public class LogbookWithEntryCreationStatusDto {
         this.logbook = logbook;
     }
 
-    public CreationStatus getUpdateStatus() {
+    public CreationStatus getCreationStatus() {
         return creationStatus;
     }
 

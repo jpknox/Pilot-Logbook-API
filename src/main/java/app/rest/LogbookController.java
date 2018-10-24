@@ -6,7 +6,6 @@ import app.data.pilot.LogbookEntry;
 import app.data.transfer.internal.logbook.DeletionStatus;
 import app.data.transfer.internal.logbook.LogbookWithEntryCreationStatusDto;
 import app.data.transfer.internal.logbook.LogbookWithEntryUpdateStatusDto;
-import app.data.transfer.internal.logbook.UpdateStatus;
 import app.rest.response.error.ErrorSingleMessageResponse;
 import app.rest.response.success.SuccessSingleMessageResponse;
 import org.slf4j.Logger;
@@ -18,8 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 import java.util.UUID;
-
-import static app.data.transfer.internal.logbook.UpdateStatus.ENTRY_UPDATED;
 
 @RestController
 public class LogbookController {
@@ -65,7 +62,7 @@ public class LogbookController {
                                                @RequestBody LogbookEntry logbookEntry) {
         LogbookWithEntryCreationStatusDto dto
                 = logbookService.createLogbookEntry(logbookId, logbookEntry);
-        switch (dto.getUpdateStatus()) {
+        switch (dto.getCreationStatus()) {
             case ENTRY_CREATED:
                 logger.info("New aircraft added to logbook '" + logbookId + "'.");
                 return ResponseEntity.status(201).body(dto.getLogbook());
