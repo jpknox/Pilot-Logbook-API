@@ -1,15 +1,27 @@
 package app.data.pilot;
 
 import app.data.aircraft.Aircraft;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 
+import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 
+@Entity
 public class Logbook {
 
-    private final UUID id = UUID.randomUUID();
-    private LinkedList<LogbookEntry> entries = new LinkedList();
+    @Id
+    @Type(type = "uuid-char")
+    private UUID id = UUID.randomUUID();
+
+    @OneToMany(
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.EAGER
+    )
+    private List<LogbookEntry> entries = new ArrayList();
 
     public Logbook() {
         //setupTestData();
@@ -20,7 +32,7 @@ public class Logbook {
     }
 
     public boolean add(LogbookEntry newEntry) {
-        entries.addLast(newEntry);
+        entries.add(newEntry);
         return true;
     }
 

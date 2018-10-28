@@ -15,9 +15,9 @@ public class Application {
         SpringApplication.run(Application.class, args);
     }
 
-    @Bean
-    public LogbookRepository logbookStorage() {
-        return new LogbookHeapRepository();
-    }
+//    @Bean
+//    public LogbookRepository logbookStorage() {
+//        return new LogbookHeapRepository();
+//    }
 
 }

@@ -1,6 +1,6 @@
 package app.control;
 
-import app.data.LogbookRepository;
+import app.data.LogbookHibernateRepository;
 import app.data.pilot.Logbook;
 import app.data.pilot.LogbookEntry;
 import app.data.transfer.internal.logbook.*;
@@ -18,28 +18,33 @@ public class LogbookService {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
-    LogbookRepository logbookRepository;
+    LogbookHibernateRepository logbookRepository;
 
     public Optional<Logbook> getLogbook(UUID logbookId) {
-        return Optional.ofNullable(
-                logbookRepository.get(logbookId)
-        );
+        return logbookRepository.findById(logbookId);
     }
 
     public Optional<UUID> createLogbook() {
-        return Optional.ofNullable(
-                logbookRepository.create()
-        );
+        UUID id = null;
+        try {
+            Logbook newLogbook = new Logbook();
+            logbookRepository.save(newLogbook);
+            id = newLogbook.getId();
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            return Optional.ofNullable(id);
+        }
     }
 
     public LogbookWithEntryCreationStatusDto createLogbookEntry(UUID logbookId, LogbookEntry logbookEntry) {
-        Optional optional = Optional.ofNullable(logbookRepository.get(logbookId));
+        Optional<Logbook> optional = logbookRepository.findById(logbookId);
         if (!optional.isPresent()) {
             return new LogbookWithEntryCreationStatusDto(null, CreationStatus.LOGBOOK_NOT_FOUND);
         }
-        Logbook logbook = (Logbook) optional.get();
+        Logbook logbook = optional.get();
         if (logbook.add(logbookEntry)) {
-            logbookRepository.replace(logbook);
+            logbookRepository.save(logbook);
             return new LogbookWithEntryCreationStatusDto(logbook, CreationStatus.ENTRY_CREATED);
         } else {
             return new LogbookWithEntryCreationStatusDto(logbook, CreationStatus.ERROR_CREATING_ENTRY);
@@ -47,23 +52,25 @@ public class LogbookService {
     }
 
     public DeletionStatus deleteLogbookEntry(UUID logbookId, UUID entryId) {
-        Optional optional = Optional.ofNullable(logbookRepository.get(logbookId));
+        Optional<Logbook> optional = logbookRepository.findById(logbookId);
         if (!optional.isPresent()) {
             return DeletionStatus.LOGBOOK_NOT_FOUND;
         }
-        Logbook logbook = (Logbook) optional.get();
+        Logbook logbook = optional.get();
         if (!logbook.get(entryId).isPresent()) {
             return DeletionStatus.ENTRY_NOT_FOUND;
         }
         if (logbook.remove(entryId)) {
+            logbookRepository.save(logbook);
             return DeletionStatus.ENTRY_DELETED;
         } else {
             return DeletionStatus.ERROR_DELETING_ENTRY;
         }
     }
 
+    //TODO: Refactor to use Optional for improved null safety.
     public LogbookWithEntryUpdateStatusDto updateLogbookEntry(UUID logbookId, UUID entryId, LogbookEntry logbookEntry) {
-        Logbook logbook = logbookRepository.get(logbookId);
+        Logbook logbook = logbookRepository.findById(logbookId).get();
         if (logbook == null) {
             return new LogbookWithEntryUpdateStatusDto(null, UpdateStatus.LOGBOOK_NOT_FOUND);
         }
@@ -72,7 +79,7 @@ public class LogbookService {
             return new LogbookWithEntryUpdateStatusDto(null, UpdateStatus.ENTRY_NOT_FOUND);
         }
         if (logbook.replace(entryId, logbookEntry)) {
-            logbookRepository.replace(logbook);
+            logbookRepository.save(logbook);
             return new LogbookWithEntryUpdateStatusDto(logbook, UpdateStatus.ENTRY_UPDATED);
         } else {
             return new LogbookWithEntryUpdateStatusDto(null, UpdateStatus.ERROR_UPDATING_ENTRY);

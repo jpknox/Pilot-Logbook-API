@@ -1,26 +1,62 @@
 package app.data.pilot;
 
 import app.data.aircraft.Aircraft;
+import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.Type;
 
+import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
 
+@Entity
 public class LogbookEntry {
 
+    @Id
+    @Type(type = "uuid-char")
     private final UUID entryId = UUID.randomUUID();
+
+    @Column(name = "date")
     private LocalDate date;
+
+    @ManyToOne(
+            targetEntity = Aircraft.class,
+            cascade = CascadeType.ALL,
+            fetch = FetchType.EAGER
+    )
     private Aircraft aircraft;
+
+    @Column(name = "captain")
     private String captain;
+
+    @Column(name = "holdersOperatingCapacity")
     private String holdersOperatingCapacity;
+
+    @Column(name = "origin")
     private String origin;
+
+    @Column(name = "destination")
     private String destination;
+
+    @Column(name = "departure")
     private LocalTime departure;
+
+    @Column(name = "arrival")
     private LocalTime arrival;
+
+    @Column(name = "singleEngineP1TimeMins")
     private int singleEngineP1TimeMins;
+
+    @Column(name = "singleEngineP2TimeMins")
     private int singleEngineP2TimeMins;
+
+    @Column(name = "numOfTakeoffs")
     private int numOfTakeoffs;
+
+    @Column(name = "numOfLandings")
     private int numOfLandings;
+
+    @Column(name = "remarks")
     private String remarks;
 
     public LogbookEntry() {
